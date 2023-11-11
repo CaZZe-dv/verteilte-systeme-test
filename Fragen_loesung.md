@@ -93,11 +93,40 @@ while ((child_pid = waitpid(-1, &status, 0)) > 0) {
     }
 }
 ```
+Das letzte Element enthält keinen Null Terminator, es könnte also zu undefiniertem Verhalten kommen, da auf Speicheradressen zugegriffen wird, auf die nicht zugegriffen werden sollte. Daher muss 1 vom Buffer abgezogen werden und das letzte Element mit einem NUll Terminator versehen werden.
 
+``` cpp
+28 recv(ns,buffer,BUF,0);
+28 recv(ns,buffer,BUF-1,0);
+29 buffer[BUF-1] = '\0';
+```
+Hier wird der Serversocket geschlossen obwohl man hier eigentlich den Client schließen möchte.
 
+``` cpp
+31 close(cs);
+close(ns);
+```
 
+2. Klassifizieren Sie den Servertyp des untenstehenden C-Programms anhand der folgenden KAtegorien und begründen Sie Ihre Entscheidung:
+- stateful/stateless
+- connection oriented/connectionless
+- iterative/concurrent
 
+Stateful/Stateless:
+The server maintains state by accepting multiple connections in a loop and creating a child process for each connection using fork(). Each child process handles its connection independently. The child processes share the same file descriptors, so they may share some state.
+It's more accurate to say that each connection handled by a child process is stateful for the duration of that connection, but the overall server can be considered stateless between different connections.
+Connection 
 
+Oriented/Connectionless:
+The server uses TCP (SOCK_STREAM), which is a connection-oriented protocol. This means that a reliable, two-way communication channel is established between the server and the client.
+
+Iterative/Concurrent:
+The server is concurrent because it uses fork() to create a new process for each incoming connection. This allows the server to handle multiple connections simultaneously.
+
+In summary:
+Stateful/Stateless: Stateless overall but stateful during each connection.
+Connection Oriented/Connectionless: Connection-oriented (uses TCP).
+Iterative/Concurrent: Concurrent (uses fork for handling multiple connections simultaneously).
 
 
 
