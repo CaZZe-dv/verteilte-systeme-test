@@ -72,7 +72,7 @@ if(listen(cs,5); == -1){
     fprintf(stderr,"Error occoured while listening for clients");
 }
 ```
-
+Endlosschleife macht in diesem Fall vielleicht wenig Sinn, hier würde ich Vorschlagen, einen Index zu erstellen, der bis 5 Clients hochzählt und dann, mit waitpid() warten bis alle Clients terminiert sind und dann serversocket schließen und mit EXIT_SUCCESS Programm beenden.
 
 ``` cpp
 23 while(1){}
@@ -82,6 +82,15 @@ while(i < 5){
     .
     .
     i++;
+}
+int status;
+pid_t child_pid;
+while ((child_pid = waitpid(-1, &status, 0)) > 0) {
+    if (WIFEXITED(status)) {
+        std::cout << "Child process " << child_pid << " terminated with status: " << WEXITSTATUS(status) << std::endl;
+    } else if (WIFSIGNALED(status)) {
+        std::cout << "Child process " << child_pid << " terminated by signal: " << WTERMSIG(status) << std::endl;
+    }
 }
 ```
 
