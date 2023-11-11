@@ -128,11 +128,16 @@ Stateful/Stateless: Stateless overall but stateful during each connection.
 Connection Oriented/Connectionless: Connection-oriented (uses TCP).
 Iterative/Concurrent: Concurrent (uses fork for handling multiple connections simultaneously).
 
+---
+
 NTP
 Reorganisiren Sie das folgende NTP Netzwerk, sodass der Ausfall der Verbindungen (markiert mit einem dicken Querstrich) bestmöglich kompensiert wird:
 - Kreis mit ZIffer: Knoten mit entsprechendem Stratum
 - Pfeil: verbundener Peer
 - Linie: mögliche Netzwerkverbindung
+
+![NTP](./image.png)
+
 
 
 
