@@ -422,3 +422,75 @@ Obwohl Signale für einfache Benachrichtigungen und die Kommunikation von Steuer
 
 ---
 
+NTP
+
+![NTP](./bilder/othernap.png)
+
+---
+
+Socketprogrammierung
+
+Was ist beim Aufruf von send() zu beachten, wenn größere Datenmengen (z.B. ein Paket mit 100kB) über einen Socket übertragen werden sollen?
+
+Beim Aufruf von send() in der Socketprogrammierung gibt es einige wichtige Punkte zu beachten, insbesondere wenn größere Datenmengen übertragen werden sollen:
+
+Puffergröße berücksichtigen:
+
+send() kann nicht garantieren, dass alle Daten in einem einzigen Aufruf erfolgreich übertragen werden. Daher sollte der Aufruf von send() in einer Schleife erfolgen, bis alle Daten übertragen wurden.
+Die Daten sollten in Puffern, die in kleinere Teile unterteilt sind, übertragen werden. Dies erleichtert die Kontrolle über die Übertragung und ermöglicht es, kleinere Pakete zu senden.
+Rückgabewert überprüfen:
+
+Der Rückgabewert von send() sollte überprüft werden, um sicherzustellen, dass die Daten erfolgreich gesendet wurden. Ein negativer Rückgabewert könnte auf einen Fehler hinweisen.
+
+``` c
+ssize_t bytes_sent;
+ssize_t total_bytes_sent = 0;
+
+while (total_bytes_sent < total_data_size) {
+    bytes_sent = send(socket_fd, buffer + total_bytes_sent, remaining_data_size, 0);
+
+    if (bytes_sent > 0) {
+        total_bytes_sent += bytes_sent;
+        remaining_data_size -= bytes_sent;
+    } else if (bytes_sent == 0) {
+        // Verbindung geschlossen
+        break;
+    } else {
+        // Fehler bei der Übertragung
+        perror("send");
+        break;
+    }
+}
+```
+
+Paketgröße optimieren:
+
+Die optimale Paketgröße hängt vom Netzwerk und den Anforderungen der Anwendung ab. Zu große Pakete können zu Fragmentierung führen, während zu kleine Pakete ineffizient sein können. Experimente und Anpassungen können notwendig sein, um die beste Leistung zu erzielen.
+Flusskontrolle beachten:
+
+Es ist wichtig, die Flusskontrolle zu berücksichtigen, um zu verhindern, dass der Sender den Empfänger mit Daten überflutet. Dies kann durch Verwendung von Mechanismen wie Windowing oder dem select()-Systemaufruf erreicht werden.
+Timeouts und Wiederholungsmechanismen einrichten:
+
+Es ist ratsam, Timeouts und Wiederholungsmechanismen zu implementieren, um mit Netzwerkproblemen umgehen zu können. Wenn der Sendevorgang zu lange dauert, könnte dies auf ein Problem hinweisen, das behandelt werden muss.
+c
+Copy code
+// Beispiel für Timeout
+struct timeval timeout;
+timeout.tv_sec = 5; // 5 Sekunden Timeout
+timeout.tv_usec = 0;
+
+setsockopt(socket_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+Durch Berücksichtigung dieser Punkte kann die Übertragung größerer Datenmengen über Sockets zuverlässiger und effizienter erfolgen.
+
+---
+
+LDAP 
+
+1. Geben Sie einen syntaktisch korrekten LDAP Suchbefehl and, der alle Einträge des LDAP Verzeichnisses mit der Suchbasis "dc=technikum-wien,dc=at" liefert, deren Vorname (Attribut givenname) mit C oder D beginnen und die Organisationseinheit (Attribut) MSE oder MGS zu finden sind.
+
+(&(objectClass=*)(givenname=|[C-D]*)(|(ou=MSE)(ou=MGS))(dc=technikum-wien,dc=at))
+
+2. Wie kann die Suche eschleunigt werden, wenn SIe annehmen, dass alle gesuchten Einträge nur eine Ebene unter dem Teilbaum "ou=People,dc=technikum-wien,dc=at" gespeichert sind?
+
+ldapsearch -x -LLL -b "ou=People,dc=technikum-wien,dc=at" -s one "(|(givenname=C)(givenname=D))"
+
