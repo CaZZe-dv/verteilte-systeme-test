@@ -574,6 +574,78 @@ Now, the order in which these print statements are executed is non-deterministic
 3: a: 1 b: 0
 ```
 
+---
+
+IPC 
+
+Wie können Sie in der Shell eine Named Pipe löschen, wie eine Message Queue? Geben SIe beide Kommandos mit korrekter Syntax an.
+
+In der Shell können Sie die Befehle mkfifo und rm verwenden, um eine Named Pipe zu erstellen bzw. zu löschen. Für Message Queues gibt es verschiedene Befehle, je nachdem, welches Message Queue-System Sie verwenden. Hier sind Beispiele für die Verwendung von Named Pipes mit mkfifo und rm:
+
+Named Pipe (mkfifo und rm):
+Named Pipe erstellen (mkfifo):
+bash
+Copy code
+mkfifo mypipe
+Dieser Befehl erstellt eine Named Pipe mit dem Namen "mypipe". Sie können diesen Namen nach Bedarf ändern.
+
+Named Pipe löschen (rm):
+bash
+Copy code
+rm mypipe
+Dieser Befehl löscht die Named Pipe mit dem Namen "mypipe". Stellen Sie sicher, dass keine Prozesse mehr auf die Pipe zugreifen, da diese beim Löschen geschlossen sein sollte.
+
+Message Queue (ipcs und ipcrm):
+Message Queue erstellen (ipcs):
+In Unix-Systemen können Sie das ipcs-Kommando verwenden, um Informationen über Message Queues anzuzeigen. Beachten Sie, dass die Erstellung einer Message Queue nicht explizit erforderlich ist. Sie wird normalerweise automatisch erstellt, wenn sie von einem Prozess angelegt wird.
+
+Message Queue löschen (ipcrm):
+bash
+Copy code
+ipcrm -Q <ID>
+Der <ID>-Platzhalter steht für die ID der Message Queue, die Sie löschen möchten. Sie können die ID mit dem ipcs-Befehl herausfinden. Beachten Sie, dass nicht alle Unix-Systeme den ipcrm-Befehl unterstützen. Verwenden Sie ggf. die Systemd-spezifischen Befehle wie systemctl.
+
+Es ist wichtig zu beachten, dass der Umgang mit Message Queues systemabhängig ist, und es können je nach dem verwendeten Betriebssystem unterschiedliche Tools und Befehle erforderlich sein.
+
+---
+
+Socketprogrammierung
+
+Was ist beim Aufruf von recv() zu beachten, wenn größere Datenmengen (z.B. ein PAket mit 100kB) über einen Socket empfangen werden sollen?
+
+Beim Aufruf von recv() in der Socketprogrammierung gibt es mehrere Dinge zu beachten, insbesondere wenn größere Datenmengen empfangen werden sollen:
+
+Puffergröße:
+Stellen Sie sicher, dass der Puffer, den Sie für recv() verwenden, groß genug ist, um die erwartete Datenmenge aufzunehmen. In Ihrem Fall, wenn Sie ein Paket mit 100 kB empfangen möchten, sollte der Puffer mindestens diese Größe haben.
+
+``` cpp
+#define BUFFER_SIZE 102400 // 100 KB
+char buffer[BUFFER_SIZE];
+```
+
+Mehrfacher Aufruf von recv():
+Beachten Sie, dass recv() nicht garantieren kann, dass alle Daten in einem einzigen Aufruf empfangen werden. Sie müssen recv() möglicherweise in einer Schleife aufrufen, bis die gesamte erwartete Datenmenge empfangen wurde.
+
+``` cpp
+ssize_t bytes_received;
+ssize_t total_bytes_received = 0;
+
+while (total_bytes_received < expected_data_size) {
+    bytes_received = recv(socket_fd, buffer + total_bytes_received, BUFFER_SIZE - total_bytes_received, 0);
+
+    if (bytes_received > 0) {
+        total_bytes_received += bytes_received;
+    } else if (bytes_received == 0) {
+        // Verbindung geschlossen
+        break;
+    } else {
+        // Fehler bei der Datenübertragung
+        perror("recv");
+        break;
+    }
+}
+```
+
 
 
 
