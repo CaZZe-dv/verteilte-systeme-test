@@ -494,3 +494,86 @@ LDAP
 
 ldapsearch -x -LLL -b "ou=People,dc=technikum-wien,dc=at" -s one "(|(givenname=C)(givenname=D))"
 
+---
+
+IPC 
+
+Warum können verwandte Prozesse (Eltern und Kindprozesse) nicht über globale Variablen Daten austauschen und kommunizieren? Begründen Sie ihre Antwort!
+
+Verwandte Prozesse (Eltern- und Kindprozesse) können prinzipiell über globale Variablen Daten austauschen und kommunizieren, jedoch gibt es einige Herausforderungen und potenzielle Probleme, die dabei auftreten können:
+
+Separater Adressraum: Jeder Prozess hat normalerweise einen eigenen separaten Adressraum. Das bedeutet, dass Änderungen an globalen Variablen in einem Prozess nicht direkt von einem anderen Prozess sichtbar sind, da sie unterschiedliche Adressräume haben.
+
+Kopieren von Daten: Wenn ein Kindprozess von einem Elternprozess abgespalten wird, kann das Betriebssystem Mechanismen wie Fork verwenden. In diesem Fall wird der Adressraum des Elternprozesses auf den Kindprozess kopiert. Änderungen an globalen Variablen in einem Prozess haben keine Auswirkungen auf den Adressraum eines anderen Prozesses, auch wenn sie zuvor denselben Wert hatten.
+
+Race Conditions: Wenn mehrere Prozesse gleichzeitig auf dieselbe globale Variable zugreifen und mindestens einer von ihnen schreibt, kann es zu sogenannten Race Conditions kommen. Das bedeutet, dass das Endergebnis davon abhängt, welcher Prozess zuerst auf die Variable zugreift. Solche Bedingungen können zu unvorhersehbarem Verhalten führen.
+
+Um den Datenaustausch zwischen Prozessen zu ermöglichen, gibt es jedoch Mechanismen wie Interprozesskommunikation (IPC). IPC-Mechanismen ermöglichen es Prozessen, Daten auszutauschen, ohne die Probleme globaler Variablen zu haben. Beispiele für IPC-Mechanismen sind Pipes, Shared Memory, und Message Queues. Diese Mechanismen bieten eine strukturierte und sichere Möglichkeit für Prozesse, miteinander zu kommunizieren, ohne auf globale Variablen angewiesen zu sein.
+
+---
+
+Fork
+
+1. Beschreiben SIe die exakte Ausgabe auf stdout. Ist die Ausgabenreienfolge varaibel oder immer ident? Begründen Sie ihre Antwort.
+
+``` cpp
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+    pid_t pid;
+    int a = 0;
+    int b = 0;
+    pid = fork();
+    switch(pid){
+        case -1:
+            printf("fork failed"); 
+            return -1;
+            break;
+        case 0:
+            a = 3;
+            b = 5;
+            printf("2: a: %d b: %d\n",a,b);
+            exit(1);
+        default:
+            b = a + 1;
+            printf("1: a: %d b: %d\n",a,b);
+            break;
+    }
+    a++;
+    b--;
+    printf("3: a: %d b: %d\n",a,b);
+    return 0;
+}
+```
+The output of the program is not guaranteed to be identical from run to run due to the concurrent execution of parent and child processes. The order in which the processes execute is not predetermined, and the operating system scheduler decides which process runs at any given time. Therefore, the interleaving of output statements from the parent and child processes can vary.
+
+Let's analyze the program execution:
+
+A fork is called, creating a child process. Both the parent and child processes continue execution from the point of the fork.
+
+In the child process (case 0), the values of a and b are set to 3 and 5, respectively. The child then prints "2: a: 3 b: 5" and exits with a status of 1.
+
+In the parent process (default), the value of b is set to a + 1, and the parent prints "1: a: 0 b: 1".
+
+Both the parent and child processes continue after the switch statement. In both processes, a is incremented and b is decremented. The parent prints "3: a: 1 b: 0", and the child would print nothing more as it has already exited.
+
+Now, the order in which these print statements are executed is non-deterministic because it depends on how the operating system scheduler decides to interleave the execution of the parent and child processes.
+
+``` cpp
+1: a: 0 b: 1
+2: a: 3 b: 5
+3: a: 1 b: 0
+```
+
+``` cpp
+2: a: 3 b: 5
+1: a: 0 b: 1
+3: a: 1 b: 0
+```
+
+
+
+
