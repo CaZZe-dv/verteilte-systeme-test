@@ -214,6 +214,20 @@ if (optind < argc) {
 Zeitsynchronisation
 1. Berechnen Sie die neue Zeit Tc eines Clients nach dem Algorithmus von Christian. Die Sendezeit des Clients T0=23115. DIe EMpfangszeit des CLients T1=23127. Der Reply des Servers enthält die Serverzeit Ts=23120
 
+Tc = Ts + (T1-T0)/2
+Tc = 23120 + (23127-23115)/2
+Tc = 23126
+
+2. Skizzieren Sie diesen Request mittels Zeitachse für CLient und Server. Zeichnen Sie die obenstehenden ZAhlen und ihre Ergebnis in die Skizze ein.
+
+![LDAP](./bilder/Zeitsynchro.png)
+
+4. Wie groß wäre der Fehler bei einer symmetrischen Übertragungsdauer und wie groß bei einer asymmetrischen Übertragungsdauer?
+
+Bei einer symmetrischen Übertragungsdauer ist der Fehler |Tc - Ts| = ∣23126 − 23120∣ = 6, Fehler beträgt also 6 Einheiten
+
+Bei der asymmetrischen wäre der Fehler |Ts-T0 + (T1-T0)/2| = 1
+
 ---
 1. Beschreiben SIe die exakte Ausgabe auf stdout. Ist die Ausgabenreienfolge varaibel oder immer ident? Begründen Sie ihre Antwort.
 
@@ -319,6 +333,14 @@ int main() {
 ```
 
 In dieser Version wurde ein Mutex (`mutex`) hinzugefügt, und der kritische Abschnitt, in dem auf gemeinsame Variablen zugegriffen wird, wird mit `pthread_mutex_lock` und `pthread_mutex_unlock` geschützt. Dies stellt sicher, dass nur ein Prozess gleichzeitig auf die gemeinsamen Variablen zugreifen kann, um Dateninkonsistenzen zu verhindern.
+
+Oder
+
+Verstoß gegen die Richtlinie das es zu Zombie Prozessen kommen kann, da der Eltern Prozess vor dem Child Prozess terminiert. 
+
+``` cpp
+wait(Null);
+```
 
 ---
 
