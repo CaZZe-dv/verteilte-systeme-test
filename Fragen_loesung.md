@@ -368,3 +368,35 @@ Zusätzlich zu diesen Unterschieden gibt es auch Gemeinsamkeiten, wie zum Beispi
 ---
 
 Eigenen sich Signale zu KOmmunikation zwischen Prozessen und zur Übermittlung größerer Datenmengen? Warum/Warum nicht?
+
+Signale sind für die Kommunikation zwischen Prozessen geeignet, allerdings haben sie einige Einschränkungen, die ihre Verwendung in bestimmten Szenarien begrenzen. Hier sind einige Überlegungen:
+
+### Für die Kommunikation zwischen Prozessen geeignet:
+
+1. **Einfachheit:**
+   - Signale sind einfach zu verwenden und erfordern nur den Aufruf von Funktionen wie `kill` oder `raise` in C.
+   - Sie bieten eine einfache Möglichkeit, einem anderen Prozess eine Benachrichtigung zu senden.
+
+2. **Echtzeit-Benachrichtigungen:**
+   - Signale eignen sich gut für die Übermittlung von Echtzeit-Benachrichtigungen über bestimmte Ereignisse, wie z.B. das Beenden eines Prozesses.
+
+### Nicht für die Übermittlung größerer Datenmengen geeignet:
+
+1. **Begrenzte Datenmenge:**
+   - Signale sind für die Übermittlung kleiner Mengen von Metadaten oder Steuerinformationen geeignet, nicht jedoch für größere Datenmengen. Die Größe der mit einem Signal übermittelten Daten ist normalerweise begrenzt.
+
+2. **Asynchronität und Unzuverlässigkeit:**
+   - Signale werden asynchron übermittelt, und es gibt keine Garantie dafür, dass sie ankommen. Sie sind nicht für die zuverlässige Übertragung von Daten ausgelegt.
+
+3. **Begrenzte Anzahl von Signalen:**
+   - Es gibt eine begrenzte Anzahl von Signalen (z.B. `SIGUSR1`, `SIGUSR2`), und einige davon haben spezielle Bedeutungen. Daher können sie nicht frei für benutzerdefinierte Datenübertragungen verwendet werden.
+
+4. **Keine Datenintegritätsgarantie:**
+   - Signale bieten keine Integritätsgarantie für die übertragenen Daten. Wenn ein Prozess ein Signal empfängt, kann nicht sichergestellt werden, dass die empfangenen Daten unverändert sind.
+
+### Fazit:
+
+Obwohl Signale für einfache Benachrichtigungen und die Kommunikation von Steuerinformationen zwischen Prozessen geeignet sind, sollten sie nicht für die Übertragung größerer Datenmengen verwendet werden. In Fällen, in denen größere Datenmengen übertragen werden müssen, sind andere IPC-Mechanismen wie Pipes, Sockets oder Shared Memory besser geeignet, da sie speziell für die zuverlässige Übertragung von Daten zwischen Prozessen entwickelt wurden.
+
+---
+
