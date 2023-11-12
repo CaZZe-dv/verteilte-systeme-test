@@ -136,9 +136,85 @@ Reorganisiren Sie das folgende NTP Netzwerk, sodass der Ausfall der Verbindungen
 - Pfeil: verbundener Peer
 - Linie: mögliche Netzwerkverbindung
 
-![NTP](./image.png)
+![NTP](./bilder/image.png)
+
+![NTP](./bilder/solution_ntp.png)
+
+---
+
+Ldap
+1. Geben sie einen syntaktisch korrekten LDAP Suchfilter an, der alle Einträge des LDAP Verzeichnisses mit der Suchbasis "dc=technikum-wien,dc=at" liefert, deren Nachname (Attribut sn) mit M oder N beginnen und die in der Organisationseinheit (Attribut) BMR oder BWI zu finden sind.
+
+(&(objectClass=*)(sn=M* | sn=N*)(|(ou=BMR)(ou=BWI))(dc=technikum-wien,dc=at))
+
+Hier eine Erklärung der Bestandteile des Filters:
+
+- (&(objectClass=*)...): Stellt sicher, dass die Einträge mindestens eine Objektklasse haben.
+- (sn=M* | sn=N*): Sucht nach Einträgen, deren Nachname mit M oder N beginnt.
+- (|(ou=BMR)(ou=BWI)): Überprüft, ob die Einträge in einer der Organisationseinheiten BMR oder BWI zu finden sind.
+- (dc=technikum-wien,dc=at): Setzt die Suchbasis auf "dc=technikum-wien,dc=at".
+
+2. Wie unterscheidet sich eine Ausgabe wenn die Abfrage nicht anonym sondern mit Authentifizierung durchgeführt wird?
+
+?
+
+---
+
+Getopt
+1. Ein Programm soll als Optionen -q und -c CONFIGDATEI sowie die Angabe eines Verzeochnisses haben. Wie muss die getopt() Funktion aufgerufen werden, um die Kommandozeile zu analysieren?
+
+``` cpp
+#include <iostream>
+#include <unistd.h>
+
+int main(int argc, char *argv[]) {
+    int opt;
+    std::string configFileName;
+
+    while ((opt = getopt(argc, argv, "qc:")) != -1) {
+        switch (opt) {
+            case 'q':
+                // Option -q gefunden
+                std::cout << "Option -q gefunden" << std::endl;
+                break;
+            case 'c':
+                // Option -c gefunden, optarg enthält den Dateinamen
+                configFileName = optarg;
+                std::cout << "Option -c mit Konfigurationsdatei: " << configFileName << std::endl;
+                break;
+            default:
+                // Unbekannte Option oder Fehler
+                std::cerr << "Unbekannte Option oder Fehler" << std::endl;
+                return 1;
+        }
+    }
+
+    // Hier kannst du mit dem Wert von optind auf das Verzeichnis zugreifen, falls vorhanden
+    if (optind < argc) {
+        std::string directoryName = argv[optind];
+        std::cout << "Verzeichnis: " << directoryName << std::endl;
+    }
+
+    return 0;
+}
+```
 
 
+2. Wie ermitteln Sie den Verzeichnisname in diesem Beispiel?
+
+``` cpp
+if (optind < argc) {
+    std::string directoryName = argv[optind];
+    std::cout << "Verzeichnis: " << directoryName << std::endl;
+}
+```
+
+---
+
+Zeitsynchronisation
+1. Berechnen Sie die neue Zeit Tc eines Clients nach dem Algorithmus von Christian. Die Sendezeit des Clients T0=23115. DIe EMpfangszeit des CLients T1=23127. Der Reply des Servers enthält die Serverzeit Ts=23120
+
+---
 
 
 
