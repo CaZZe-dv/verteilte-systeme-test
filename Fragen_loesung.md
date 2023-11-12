@@ -344,3 +344,27 @@ Die Funktionen `ntohs()` und `ntohl()` sind darauf ausgelegt, Daten mit fester L
 Wenn Sie eine Zeichenkette (String) aus dem Netzwerk empfangen, müssen Sie sicherstellen, dass die Zeichenkette selbst in der richtigen Zeichenkodierung ist. Die Endianness wird normalerweise nur für binäre Daten wie Zahlen relevant. Daher gibt es keine spezielle Funktion wie `ntohstr()` für Strings, da die Endianness nicht das primäre Problem bei der Übertragung von Zeichenketten zwischen Rechnern ist.
 
 Für Zeichenkettenübertragungen über das Netzwerk sind andere Konzepte wie Textkodierung, Zeichensatz und Protokolle wie UTF-8 oder Base64 von größerer Bedeutung. In der Regel müssen Sie die Zeichenkodierung separat verwalten, wenn Sie mit Zeichenketten arbeiten, und es gibt Funktionen in vielen Programmiersprachen, um dies zu erleichtern (z. B. `iconv` in C oder Funktionen zur Zeichencodierung in höheren Ebenen von Netzwerkbibliotheken).
+
+---
+
+Welche Unterschiede gibt es zwischen Named und Unnamed Pipes? Nennen Sie 3 Unterscheide!
+
+Named Pipes (auch FIFOs genannt) und Unnamed Pipes (auch anonyme Pipes genannt) sind beide Mechanismen zur Interprozesskommunikation (IPC) in Unix-basierten Betriebssystemen. Hier sind drei Hauptunterschiede zwischen Named und Unnamed Pipes:
+
+1. **Benennung (Named vs. Unnamed):**
+   - **Named Pipes:** Werden durch einen Dateinamen im Dateisystem identifiziert und existieren als Dateien. Sie werden mit dem Befehl `mkfifo` erstellt und können zwischen nicht-verwandten Prozessen für die Kommunikation verwendet werden.
+   - **Unnamed Pipes:** Sind nicht durch einen Dateinamen im Dateisystem identifiziert. Sie werden durch den `pipe`-Systemaufruf erstellt und sind auf die Kommunikation zwischen einem Eltern- und einem Kindprozess beschränkt.
+
+2. **Persistenz:**
+   - **Named Pipes:** Haben eine persistente Existenz im Dateisystem und können über mehrere unabhängige Prozesse hinweg verwendet werden. Sie müssen explizit erstellt und gelöscht werden.
+   - **Unnamed Pipes:** Existieren nur, solange die betreffenden Prozesse existieren. Sie werden normalerweise von einem Prozess erstellt und können nur zwischen verwandten Prozessen verwendet werden.
+
+3. **Kommunikation zwischen nicht-verwandten Prozessen:**
+   - **Named Pipes:** Ermöglichen die Kommunikation zwischen nicht-verwandten Prozessen, da sie durch einen Dateinamen identifiziert werden und dieser Dateiname im Dateisystem sichtbar ist.
+   - **Unnamed Pipes:** Sind auf die Kommunikation zwischen verwandten Prozessen (Eltern und Kind) beschränkt. Sie teilen sich den Speicherbereich und sind daher nicht für die Kommunikation zwischen nicht-verwandten Prozessen geeignet.
+
+Zusätzlich zu diesen Unterschieden gibt es auch Gemeinsamkeiten, wie zum Beispiel die Verwendung von `read` und `write` Operationen für die Datenübertragung und die Tatsache, dass beide Mechanismen Daten im Byte-Stream-Format übertragen. Der Auswahl zwischen Named und Unnamed Pipes hängt von den Anforderungen des konkreten Anwendungsfalls ab.
+
+---
+
+Eigenen sich Signale zu KOmmunikation zwischen Prozessen und zur Übermittlung größerer Datenmengen? Warum/Warum nicht?
