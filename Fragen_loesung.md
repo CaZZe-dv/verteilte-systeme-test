@@ -215,6 +215,109 @@ Zeitsynchronisation
 1. Berechnen Sie die neue Zeit Tc eines Clients nach dem Algorithmus von Christian. Die Sendezeit des Clients T0=23115. DIe EMpfangszeit des CLients T1=23127. Der Reply des Servers enthält die Serverzeit Ts=23120
 
 ---
+1. Beschreiben SIe die exakte Ausgabe auf stdout. Ist die Ausgabenreienfolge varaibel oder immer ident? Begründen Sie ihre Antwort.
 
+``` cpp
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(){
+    pid_t pid;
+    int a = 12;
+    int b = 5;
+    pid = fork();
+    switch(pid){
+        case -1:
+            printf("fork failed"); 
+            return -1;
+            break;
+        case 0:
+            sleep(3);
+            b = a+1;
+            printf("2: a: %d b: %d\n",a,b);
+            break;
+        default:
+            sleep(1);
+            a = 3;
+            b = 5;
+            printf("1: a: %d b: %d\n",a,b);
+            break;
+    }
+    a++;
+    b--;
+    printf("3: a: %d b: %d\n",a,b);
+    return 0;
+}
+```
+Laut mehrfachem Ausführem in der Konsole ist die Ausgabe immer gleich. Dem Aspekt nach zu beurteilen ist die  Ausgabe immer ident.
+
+``` cpp
+1: a: 3 b: 5
+3: a: 4 b: 4
+2: a: 12 b: 13
+3: a: 13 b: 12
+```
+
+
+2. Welche Programmierrichtlinie für parallele Prozesse wird verletzt? Erweitern Sie das Programm entsprechend.
+
+Das gegebene Programm verletzt die Programmierrichtlinie für parallele Prozesse, die besagt, dass gemeinsam genutzte Ressourcen, wie z.B. Variablen, durch Mutexe oder andere Mechanismen geschützt werden sollten, um Dateninkonsistenzen und Wettlaufbedingungen zu verhindern.
+
+In diesem Fall teilen sich der Eltern- und der Kindprozess die Variablen `a` und `b` ohne Synchronisierung. Dies könnte zu unvorhersehbarem Verhalten führen, da beide Prozesse gleichzeitig auf die Variablen zugreifen und modifizieren.
+
+Um dies zu beheben, können Sie Mutexe verwenden, um den kritischen Abschnitt zu schützen. Hier ist eine erweiterte Version des Programms mit Mutexen:
+
+```c
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <pthread.h>
+
+// Mutex für den kritischen Abschnitt
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int main() {
+    pid_t pid;
+    int a = 12;
+    int b = 5;
+    pid = fork();
+
+    switch (pid) {
+    case -1:
+        printf("fork failed");
+        return -1;
+        break;
+    case 0:
+        sleep(3);
+        // Kindprozess: Lock den Mutex, um auf gemeinsame Variablen zuzugreifen
+        pthread_mutex_lock(&mutex);
+        b = a + 1;
+        printf("2: a: %d b: %d\n", a, b);
+        pthread_mutex_unlock(&mutex); // Unlock den Mutex
+        break;
+    default:
+        sleep(1);
+        // Elternprozess: Lock den Mutex, um auf gemeinsame Variablen zuzugreifen
+        pthread_mutex_lock(&mutex);
+        a = 3;
+        b = 5;
+        printf("1: a: %d b: %d\n", a, b);
+        pthread_mutex_unlock(&mutex); // Unlock den Mutex
+        break;
+    }
+
+    // Beide Prozesse können jetzt auf gemeinsame Variablen zugreifen, ohne Konflikte
+    pthread_mutex_lock(&mutex);
+    a++;
+    b--;
+    printf("3: a: %d b: %d\n", a, b);
+    pthread_mutex_unlock(&mutex); // Unlock den Mutex
+
+    return 0;
+}
+```
+
+In dieser Version wurde ein Mutex (`mutex`) hinzugefügt, und der kritische Abschnitt, in dem auf gemeinsame Variablen zugegriffen wird, wird mit `pthread_mutex_lock` und `pthread_mutex_unlock` geschützt. Dies stellt sicher, dass nur ein Prozess gleichzeitig auf die gemeinsamen Variablen zugreifen kann, um Dateninkonsistenzen zu verhindern.
 
 
