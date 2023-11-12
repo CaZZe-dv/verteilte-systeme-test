@@ -646,6 +646,147 @@ while (total_bytes_received < expected_data_size) {
 }
 ```
 
+---
 
+Socketprogrammierung
 
+Warum benötigt ein TCP Server 2 Sockets für eine Verbindung? Ist dies auch bei UDP der Fall? Begründen Sie Ihre Antwort.
 
+Ein TCP-Server benötigt normalerweise zwei Sockets für jede TCP-Verbindung, während ein UDP-Server typischerweise nur einen Socket pro Verbindung benötigt. Dies liegt an den unterschiedlichen Eigenschaften und Mechanismen, die von TCP und UDP verwendet werden.
+
+### TCP:
+
+1. **Listener-Socket:**
+   - Der Server verwendet einen sogenannten Listener-Socket (oft ein sogenannter "Passive Open" Socket), um auf eingehende Verbindungen zu lauschen. Dieser Socket akzeptiert neue Verbindungen von Clienten.
+   - Der Listener-Socket ist für das Akzeptieren eingehender Verbindungen verantwortlich, aber er stellt keine direkte Kommunikation mit den Clients her.
+
+2. **Daten-Socket:**
+   - Sobald der Listener-Socket eine Verbindung akzeptiert hat, erstellt der Server einen neuen Daten-Socket (oft ein sogenannter "Active Open" Socket), um Daten mit dem jeweiligen Clienten auszutauschen.
+   - Dieser Daten-Socket wird dann für die tatsächliche Kommunikation mit dem Clienten verwendet.
+
+   ```plaintext
+   +--------------+            +--------------+
+   | Listener     |            | Daten        |
+   | Socket       |            | Socket       |
+   +--------------+            +--------------+
+   | Akzeptiert   |            | Kommuniziert |
+   | Verbindungen |            | mit Client   |
+   +--------------+            +--------------+
+   ```
+
+### UDP:
+
+1. **Einzelner Socket:**
+   - UDP ist verbindungslos und verwendet einen einzigen Socket sowohl für den Empfang als auch für den Sendevorgang.
+   - Der Server wartet auf eingehende UDP-Pakete auf einem einzigen Socket und sendet Antworten über denselben Socket.
+
+   ```plaintext
+   +--------------+
+   | UDP Socket   |
+   +--------------+
+   | Empfängt und  |
+   | Sendet       |
+   | UDP-Pakete   |
+   +--------------+
+   ```
+
+In UDP gibt es keine explizite Verbindung wie in TCP. Jedes Paket steht für sich, und es gibt keine Notwendigkeit für separate Sockets für das Akzeptieren eingehender Verbindungen und die anschließende Datenkommunikation.
+
+In Zusammenfassung: Ein TCP-Server benötigt zwei Sockets (einen für das Akzeptieren von Verbindungen und einen für die Datenkommunikation), während ein UDP-Server normalerweise mit einem einzelnen Socket auskommt.
+
+---
+
+IPC
+
+Welche Möglichkeiten haben Sie kennen gelernt, Ergebnisse (z.B. Berechnungen) eines Kind-Prozesses an den ElternProzess zurückzuliefern? Nennen Sie 3 unterschiedliche Varianten und beschreiben Sie deren Vor- und Nachteile.
+
+Es gibt mehrere Möglichkeiten, Ergebnisse eines Kindprozesses an den Elternprozess zurückzuliefern. Hier sind drei unterschiedliche Varianten mit ihren jeweiligen Vor- und Nachteilen:
+
+1. **Exit-Status:**
+   - **Vorteile:**
+     - Einfach zu implementieren: Der Kindprozess kann seinen Exit-Status durch die Funktion `exit()` oder `return` an den Elternprozess zurückgeben.
+     - Geringer Overhead: Geringer zusätzlicher Overhead, da dieser Mechanismus Teil des normalen Prozessbeendigungsprozesses ist.
+
+   - **Nachteile:**
+     - Begrenzter Datenumfang: Kann nur einen kleinen Bereich von Statuscodes zurückgeben (normalerweise ein Byte).
+     - Keine direkte Datenübergabe: Keine Möglichkeit, größere Datenmengen direkt zu übergeben.
+
+2. **Pipe (Pipe oder Named Pipe):**
+   - **Vorteile:**
+     - Datenübertragung: Ermöglicht die Übertragung von Daten zwischen Prozessen.
+     - Bidirektionale Kommunikation: Pipes können in beiden Richtungen kommunizieren.
+
+   - **Nachteile:**
+     - Komplexität: Erfordert zusätzlichen Code, um Daten zu schreiben und zu lesen.
+     - Limitierte Datenmenge: Die Datenmenge, die in eine Pipe geschrieben werden kann, ist begrenzt.
+
+   Beispiel für eine Pipe in C:
+
+   ```c
+   // Elternprozess
+   int pipefd[2];
+   pipe(pipefd);
+
+   if (fork() == 0) {
+       // Kindprozess
+       close(pipefd[0]); // Schließe Leseseite der Pipe
+       // Schreibe Daten in die Pipe
+       write(pipefd[1], "Hello from child", 17);
+       close(pipefd[1]); // Schließe Schreibseite der Pipe im Kindprozess
+       exit(0);
+   } else {
+       // Elternprozess
+       close(pipefd[1]); // Schließe Schreibseite der Pipe im Elternprozess
+       char buffer[20];
+       // Lese Daten aus der Pipe
+       read(pipefd[0], buffer, sizeof(buffer));
+       close(pipefd[0]); // Schließe Leseseite der Pipe
+       printf("Received: %s\n", buffer);
+   }
+   ```
+
+3. **Shared Memory:**
+   - **Vorteile:**
+     - Effiziente Datenübertragung: Ermöglicht eine effiziente Datenübertragung zwischen Prozessen, da der Speicherbereich geteilt wird.
+     - Größere Datenmengen: Bietet eine Möglichkeit, größere Datenmengen effizient zu übertragen.
+
+   - **Nachteile:**
+     - Komplexität: Etwas komplexer in der Handhabung als Exit-Status oder Pipes.
+     - Synchronisation: Erfordert Synchronisation, um Konflikte beim Zugriff auf den gemeinsamen Speicher zu verhindern.
+
+   Beispiel für Shared Memory in C mit der POSIX-API:
+
+   ```c
+   #include <sys/mman.h>
+   #include <fcntl.h>
+   #include <unistd.h>
+
+   int main() {
+       const char *shared_memory_name = "/my_shared_memory";
+
+       // Erzeuge einen gemeinsamen Speicherbereich
+       int fd = shm_open(shared_memory_name, O_CREAT | O_RDWR, 0666);
+       ftruncate(fd, sizeof(int));
+
+       int *shared_data = mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+       if (fork() == 0) {
+           // Kindprozess
+           *shared_data = 42;
+           close(fd);
+           exit(0);
+       } else {
+           // Elternprozess
+           wait(NULL); // Warte auf das Ende des Kindprozesses
+           printf("Received: %d\n", *shared_data);
+           close(fd);
+           shm_unlink(shared_memory_name);
+       }
+
+       return 0;
+   }
+   ```
+
+Die Auswahl der Methode hängt von den spezifischen Anforderungen und Beschränkungen des Programms ab. Exit-Status ist einfach und leichtgewichtig, Pipes sind gut für kleine Datenmengen geeignet, und Shared Memory bietet eine effiziente Möglichkeit, größere Datenmengen auszutauschen.
+
+Signals, Named - und Unnamed Pipes, Message Queues.
